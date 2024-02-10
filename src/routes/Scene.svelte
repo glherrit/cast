@@ -69,11 +69,7 @@
   }
 
   function sourceClick() {
-    [tracePoints, directionCosines] = buildPath(
-      scene,
-      probeHeightX,
-      probeHeightY
-    );
+    tracePoints = buildPath(scene, probeHeightX, probeHeightY);
   }
 
   let tracePoints: Vector3[] = [];
@@ -97,7 +93,6 @@
   //console.log("🚀 ~ lensTwo:", lensTwo)
 
   let targetSag = sagAt(ROC, probeHeightY);
-  let traceDataCount = 0;
   //const temp = findClosestX(lensTwo, probeHeight)
   const target = new Vector3(0, probeHeightY, targetSag + 10);
   console.log("🚀 ~ target:", pv(target));
