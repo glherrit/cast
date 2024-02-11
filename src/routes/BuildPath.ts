@@ -1,59 +1,69 @@
 import { Vector3, Scene, Raycaster } from "three";
 import { calculateRefractionDirection, intersectRayPlane } from "./utils";
 
-export function buildPath(
-  scene: Scene,
-  probeHeightX: number,
-  probeHeightY: number): Vector3[]  {  
-  const nz = 2.4027858866;
-  const nair = 1.0;
+const DebugThis = true;
+
+export function buildPath( 
+  scene: Scene, 
+  startPosition: Vector3, 
+  startDirection: Vector3): Vector3[]  {  
+  const n_air = 1.0;
+
   const tracePoints: Vector3[] = [];
   const directionCosines: Vector3[] = [];
   const surfaceNormals: Vector3[] = [];
 
-  // get random integer between 0 and 10
-  // get everything set up and zero out arrays
-  // set up starting vectors
-  let radius = 20;
-  while (radius > 10) {
-    probeHeightY = Math.floor(Math.random() * 21) - 10;
-    probeHeightX = Math.floor(Math.random() * 21) - 10;
-    radius = Math.sqrt(probeHeightX ** 2 + probeHeightY ** 2);
-  }
-
   // find children with name 'optics'
-  const elements = scene.children.filter(
+  const opticsInPath = scene.children.filter(
     (c) => c.name === "lens" || c.name === "mirror"
   );
-  console.log("🚀 ~ elements:", elements);
-  if (!elements) {
-    console.log("*** no elements found ***");
+
+  // 🫨🫨🫨🫨🫨🫨🫨🫨🫨🫨🫨🫨🫨🫨🫨🫨🫨🫨🫨🫨
+  if (DebugThis) console.log("🚀 ~ opticsInPath:", opticsInPath);
+
+  if (!opticsInPath) {
+    console.log("*** no optics found ***");
     return tracePoints;
   }
-  // setup raycaster starting point and direction
-  const startPosition = new Vector3(probeHeightX, probeHeightY, -10);
-  const startDirection = new Vector3(0, 0, 1);
 
-  // **** Surface zero is starting point **** //
-  tracePoints.push(startPosition);
-  directionCosines.push(startDirection);
+  // **** add starting points to arrays **** //
+  tracePoints.push(startPosition.clone());
+  directionCosines.push(startDirection.clone());
 
-  for (let i = 0; i < 2; i++) {
+  for (let i = 0; i < opticsInPath.length; i++) {
+
+    // ********************************************
+    // Side 1 action starts here
+    // get index for this optic and
+    // start raycaster at last trace point
+
+    const n_glass = opticsInPath[i].userData.Index
+
     const raycaster = new Raycaster(
       tracePoints[tracePoints.length - 1].clone(),
       directionCosines[directionCosines.length - 1].clone(),
       0,
       1000
     );
-    const hit = raycaster.intersectObject(elements[i], false);
-    // console.log("hits for element", i, elements[i].position.z);
-    // console.log("hits side 1", hit);
+    
+    // look for intersections at next optic in path
     // first check for no hits - bail out if no hits
-    if (hit.length === 0) {
-      console.log("*** no hits Surface 1 ***");
+
+    const hitsSide1 = raycaster.intersectObject(opticsInPath[i], false);
+
+    // 🫨🫨🫨🫨🫨🫨🫨🫨🫨🫨🫨🫨🫨🫨🫨🫨🫨🫨🫨🫨
+    if (DebugThis) {
+      console.log("🫨🫨🫨🫨🫨🫨🫨🫨🫨")
+      console.log(`🚀 element ${i} Side 1 has ${hitsSide1.length} hits`);
+      console.log("hits side 2", hitsSide1);
+    }
+
+    if (hitsSide1.length === 0) {
+      console.log("*** no hits Surface 1, Optic ", i, "  ***");
       console.log("trace[-1]", tracePoints[tracePoints.length - 1]);
       return tracePoints;
-    }
+    } 
+
     // take first hit point & normal as a general rule
     // if the ray does not strike a surface, then bale out
     //
@@ -63,64 +73,77 @@ export function buildPath(
     let hitNormal: Vector3;
     try {
       hitPoint =
-        hit[0].point === undefined ? new Vector3(0, 0, 0) : hit[0].point;
+      hitsSide1[0].point === undefined ? new Vector3(0, 0, 0) : hitsSide1[0].point;
       hitNormal = new Vector3(
-        hit[0].normal?.x,
-        hit[0].normal?.z === undefined ? 0 : -hit[0].normal.z,
-        hit[0].normal?.y
+        hitsSide1[0].normal?.x === undefined ? 0 : hitsSide1[0].normal.x,
+        hitsSide1[0].normal?.z === undefined ? 0 : -hitsSide1[0].normal.z,
+        hitsSide1[0].normal?.y === undefined ? 0 : hitsSide1[0].normal.y
       );
     } catch (e) {
       console.log("*** error in hit[0].point ***");
       console.log("trace[-1]", tracePoints[tracePoints.length - 1]);
-      console.log("hit", hit);
+      console.log("hit", hitsSide1);
       return tracePoints;
     }
 
     // calculate surface normal at intersection point
     // const centerOfCurv = new Vector3(0, 0, ROC + zPosition); // first find center of curvature
     // const normal = target.sub(centerOfCurv).normalize();
+
     tracePoints.push(hitPoint);
     surfaceNormals.push(hitNormal); // direction 1
 
+    // ********************************************
     // calculate refraction side 1
-    let refract1 = calculateRefractionDirection(
+
+    let refractedDirSide1 = calculateRefractionDirection(
       directionCosines[directionCosines.length - 1].clone(),
       hitNormal.clone(),
-      nair,
-      nz
+      n_air,
+      n_glass
     );
-    directionCosines.push(refract1); // direction 1
-    raycaster.set(hitPoint.clone(), refract1.clone());
-    const hit2 = raycaster.intersectObject(elements[i], false);
-    // console.log("hits for element", i, elements[i].position.z);
-    // console.log("hits side 2", hit2);
+    directionCosines.push(refractedDirSide1); // direction 1
+
+    // ********************************************
+    // setup and trace to side 2
+
+    raycaster.set(hitPoint.clone(), refractedDirSide1.clone());
+    const hitsSide2 = raycaster.intersectObject(opticsInPath[i], false);
+
+    // 🫨🫨🫨🫨🫨🫨🫨🫨🫨🫨🫨🫨🫨🫨🫨🫨🫨🫨🫨🫨
+    if (DebugThis) {
+      console.log(`🚀 element ${i} Side 2 has ${hitsSide2.length} hits`);
+      console.log("hits side 2", hitsSide2);
+    }
 
     let whichhit = 0;
-    hit2.forEach((h, i) => {
-      if (h.distance > hit2[whichhit].distance) whichhit = i;
+    hitsSide2.forEach((h, i) => {
+      if (h.distance > hitsSide2[whichhit].distance) whichhit = i;
     });
-    //let hitm = hit2.reduce((max, obj) => obj.distance > max.distance ? obj : max, hit2[0]);
+    
+    tracePoints.push(hitsSide2[whichhit].point);
+    const normalX = hitsSide2[whichhit].normal?.x;
+    const normalY = hitsSide2[whichhit].normal?.y;
+    const normalZ = hitsSide2[whichhit].normal?.z;
 
-    tracePoints.push(hit2[whichhit].point);
-    const normalX = hit2[whichhit].normal?.x;
-    const normalZ = hit2[whichhit].normal?.z;
-    const normalY = hit2[whichhit].normal?.y;
-
+    // there has to be an easier way to do this
     const hitNormal2 = new Vector3(
       normalX === undefined ? 0 : normalX,
       normalZ === undefined ? 0 : -normalZ,
-      normalY
+      normalY === undefined ? 0 : normalY
     );
-    // console.log('test hit21', pv(hitNormal2))
-    // const hitNormal2 = new Vector3(0, hit2[whichhit].normal?.z === undefined ? 0 : -hit2[whichhit].normal.z, hit2[whichhit].normal?.y)
-    // console.log('test hit22', pv(hitNormal2))
 
     surfaceNormals.push(hitNormal2); // direction 2
 
-    // calculate refraction side 2 & translate to focal plane
-    let refract2 = calculateRefractionDirection(refract1.clone(), hitNormal2.clone(), nz, nair);
-    directionCosines.push(refract2);
+    // ********************************************
+    // calculate refraction side 2
+
+    let refractedDirSide2 = calculateRefractionDirection(refractedDirSide1.clone(), hitNormal2.clone(), n_glass, n_air);
+    directionCosines.push(refractedDirSide2);
   }
+
+  // ********************************************
+  // final step is to trace to image plane if needed
 
   const imagePlane = 37.241; // (taken from oslo)
   let [image, d] = intersectRayPlane(
@@ -129,23 +152,17 @@ export function buildPath(
     new Vector3(0, 0, imagePlane),
     new Vector3(0, 0, 1)
   );
-  // **** Surface zero is starting point **** //
-  tracePoints.push(image);
+
+  tracePoints.push(image);  // last trace point but use previous direction
   directionCosines.push(directionCosines[directionCosines.length - 1]);
 
-  // console.log("🚀 ~ hit:", hit)
-  // console.log("🚀 ~ hit:", hit[0])
-  // console.log("🚀 ~ hit:", hit[0].point)
-  // console.log("🚀 ~ hitPoint:", hitPoint)
-  // console.log("🚀 ~ hitNormal:", hitNormal)
-  // console.log("🚀 ~ normal:", normal)
-  // console.log("🚀 ~ refract1:", refract1)
-  // console.log("🚀 ~ hit2:", hit2)
-  // console.log("🚀 ~ hit2[]:", hit2[whichhit])
-  // console.log("source click")
-  // console.log("🚀 ~ image:", image)
-  // console.log("🚀~ tracePoints:", tracePoints);
-  // console.log("🚀~ directionCosines:", directionCosines);
-  // console.log("🚀~ surfaceNormals:", surfaceNormals);
+  // 🫨🫨🫨🫨🫨🫨🫨🫨🫨🫨🫨🫨🫨🫨🫨🫨🫨🫨🫨🫨
+  if (DebugThis) {
+    console.log("🫨🫨🫨🫨🫨🫨🫨🫨🫨")
+    console.log("🚀~ tracePoints:", tracePoints);
+    console.log("🚀~ directionCosines:", directionCosines);
+    console.log("🚀~ surfaceNormals:", surfaceNormals);
+  }
   return tracePoints;
 }
+

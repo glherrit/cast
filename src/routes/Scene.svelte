@@ -17,6 +17,8 @@
     Object3D,
     type Object3DEventMap,
     ConstantColorFactor,
+    MeshPhongMaterial,
+    Mesh,
   } from "three";
   import { onMount } from "svelte";
   import { interactivity } from "@threlte/extras";
@@ -69,7 +71,20 @@
   }
 
   function sourceClick() {
-    tracePoints = buildPath(scene, probeHeightX, probeHeightY);
+    let radius = 20;
+    while (radius > 10) {
+      probeHeightY = Math.floor(Math.random() * 21) - 10;
+      probeHeightX = Math.floor(Math.random() * 21) - 10;
+      radius = Math.sqrt(probeHeightX ** 2 + probeHeightY ** 2);
+    }
+
+    // probeHeightX = 5;
+    // probeHeightY = 5;
+
+    const startPosition = new Vector3(probeHeightX, probeHeightY, -10);
+    const startDirection = new Vector3(0, 0, 1);
+
+    tracePoints = buildPath(scene, startPosition, startDirection);
   }
 
   let tracePoints: Vector3[] = [];
@@ -88,17 +103,29 @@
   const ApStep = 0.2;
   const nz = 2.4027858866;
 
+  const lensProps = {
+    ROC: 50,
+    Index: 2.4027858866,
+  };
+
   const lensTwo = genLensShellPoints(Aperture, ROC, 3, ApStep);
   let lens2 = new LatheGeometry(lensTwo, 51, 0, Math.PI * 2);
   //console.log("🚀 ~ lensTwo:", lensTwo)
-
-  let targetSag = sagAt(ROC, probeHeightY);
-  //const temp = findClosestX(lensTwo, probeHeight)
-  const target = new Vector3(0, probeHeightY, targetSag + 10);
-  console.log("🚀 ~ target:", pv(target));
+  // let geo = new LatheGeometry(lensTwo, 51, 0, Math.PI * 2);
+  // let matl = new MeshPhongMaterial({
+  //   color: "yellow",
+  //   opacity: 0.8,
+  //   transparent: true,
+  //   side: 2,
+  // });
+  // var mesh = new Mesh(geo, matl);
+  // mesh.position.set(0, -20, 0);
+  // mesh.rotation.set(90 * DEG2RAD, 0, 0);
+  // mesh.name = "mirror";
+  // mesh.userData = lensProps;
 </script>
 
-<T.PerspectiveCamera makeDefault position={[-30, 10, -30]} fov={50}>
+<T.PerspectiveCamera makeDefault position={[-100, 0, 0]} fov={50}>
   <OrbitControls enableZoom={true} enableDamping target={[0, 0, 6]} />
 </T.PerspectiveCamera>
 
@@ -126,6 +153,7 @@
   position={[0, 0, zPosition]}
   rotation={[90 * DEG2RAD, 0, 0]}
   name={"lens"}
+  userData={lensProps}
 >
   <T.MeshPhongMaterial
     color={"yellow"}
@@ -142,6 +170,7 @@
   position={[0, 0, zPosition * 2]}
   rotation={[90 * DEG2RAD, 0, 0]}
   name={"lens"}
+  userData={lensProps}
 >
   <T.MeshPhongMaterial
     color={"yellow"}
