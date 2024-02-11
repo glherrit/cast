@@ -5,7 +5,7 @@ export function genLensShellPoints(Apert: number, R: number, CT: number, dr: num
     const pts = []
     const tweak = dr / 10
     for(let r = 0; r < Apert + tweak; r += dr) {
-      const z = sagAt(R, r)
+      const z = sagAt(R, -6.0047391860995, r)
       pts.push(new Vector2(r, z))
     }
 
@@ -19,8 +19,13 @@ export function genLensShellPoints(Apert: number, R: number, CT: number, dr: num
     return pts;
 }
 
-export function sagAt(R: number, r: number) {
-return R - Math.sqrt(R * R - r * r)
+export function sagAt(R: number, k: number, r: number) {
+  let curvature = 0;
+  if (Math.abs(R) > 1e-3) {
+    curvature = 1 / R;
+  }
+  return r * r / (R + Math.sqrt(R * R - (1 + k) * r * r));
+// return R - Math.sqrt(R * R - r * r)
 }
 
 export function calculateRefractionDirection(
@@ -47,7 +52,7 @@ export function calculateRefractionDirection(
       .sub(surfaceNormal.clone().multiplyScalar(cosThetaR));
   
     return refractedDirection.normalize();
-  }
+}
 
   export function intersectRayPlane(p0: Vector3, e0: Vector3, p1: Vector3, n1: Vector3): [Vector3, number] {
     // Calculate the dot product of the direction vector and the plane normal

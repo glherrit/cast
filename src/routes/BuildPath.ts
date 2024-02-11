@@ -1,7 +1,7 @@
 import { Vector3, Scene, Raycaster } from "three";
 import { calculateRefractionDirection, intersectRayPlane } from "./utils";
 
-const DebugThis = true;
+const DebugThis = false;
 
 export function buildPath( 
   scene: Scene, 

@@ -78,8 +78,8 @@
       radius = Math.sqrt(probeHeightX ** 2 + probeHeightY ** 2);
     }
 
-    // probeHeightX = 5;
-    // probeHeightY = 5;
+    probeHeightX = 8;
+    probeHeightY = 8;
 
     const startPosition = new Vector3(probeHeightX, probeHeightY, -10);
     const startDirection = new Vector3(0, 0, 1);
