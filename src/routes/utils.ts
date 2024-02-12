@@ -5,7 +5,7 @@ export function genLensShellPoints(Apert: number, R: number, CT: number, dr: num
     const pts = []
     const tweak = dr / 10
     for(let r = 0; r < Apert + tweak; r += dr) {
-      const z = sagAt(R, -6.0047391860995, r)
+      const z = sagAt(R, 0, r)
       pts.push(new Vector2(r, z))
     }
 

@@ -33,7 +33,7 @@
     pv,
     sagAt,
   } from "./utils";
-  import { buildPath } from "./BuildPath";
+  import { buildRayCasterPath } from "./BuildPath";
 
   interactivity();
   const centerLine: Float32Array = new Float32Array([0, 0, 0, 0, 0, 50]);
@@ -83,8 +83,15 @@
 
     const startPosition = new Vector3(probeHeightX, probeHeightY, -10);
     const startDirection = new Vector3(0, 0, 1);
-
-    tracePoints = buildPath(scene, startPosition, startDirection);
+    const image: Vector3 = new Vector3(-5.2, 0, 50);
+    tracePoints = buildRayCasterPath(
+      scene,
+      probeHeightX,
+      probeHeightY,
+      image,
+      startPosition,
+      startDirection
+    );
   }
 
   let tracePoints: Vector3[] = [];
@@ -97,7 +104,7 @@
 
   let probeHeightY = 5;
   let probeHeightX = 5;
-  const ROC = 50;
+  const ROC = 100;
   const zPosition = 10;
   const Aperture = 12.5;
   const ApStep = 0.2;
@@ -147,7 +154,7 @@
   <T.MeshStandardMaterial color="blue" />
 </T.Mesh>
 
-<!-- Lens Geometry -->
+<!-- Lens 1 Geometry -->
 <T.Mesh
   geometry={lens2}
   position={[0, 0, zPosition]}
@@ -164,7 +171,7 @@
   />
 </T.Mesh>
 
-<!-- Lens Geometry -->
+<!-- Lens 2 Geometry -->
 <T.Mesh
   geometry={lens2}
   position={[0, 0, zPosition * 2]}
@@ -177,6 +184,23 @@
     shinness={100}
     opacity={0.8}
     transparent
+    side={2}
+  />
+</T.Mesh>
+
+<!-- Mirror 1 Geometry -->
+<T.Mesh
+  position={[1, 0, 50 + 1]}
+  rotation={[90 * DEG2RAD, 0, -45 * DEG2RAD]}
+  name={"mirror"}
+  userData={lensProps}
+>
+  <T.CylinderGeometry args={[10, 10, 2 * Math.SQRT2]} />
+  <T.MeshPhongMaterial
+    color={"lightblue"}
+    shinness={100}
+    opacity={1}
+    reflectivity={1}
     side={2}
   />
 </T.Mesh>
