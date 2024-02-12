@@ -54,7 +54,7 @@ export function calculateRefractionDirection(
     return refractedDirection.normalize();
 }
 
-  export function intersectRayPlane(p0: Vector3, e0: Vector3, p1: Vector3, n1: Vector3): [Vector3, number] {
+export function intersectRayPlane(p0: Vector3, e0: Vector3, p1: Vector3, n1: Vector3): [Vector3, number] {
     // Calculate the dot product of the direction vector and the plane normal
     // const dot = e0.dot(n1);
     // // Ray is parallel to the plane, no intersection - need to improve error handling

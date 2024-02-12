@@ -19,6 +19,7 @@
     ConstantColorFactor,
     MeshPhongMaterial,
     Mesh,
+    Group,
   } from "three";
   import { onMount } from "svelte";
   import { interactivity } from "@threlte/extras";
@@ -33,10 +34,13 @@
     pv,
     sagAt,
   } from "./utils";
-  import { buildRayCasterPath } from "./BuildPath";
+  import { buildRayCasterPath } from "./BuildRCPath";
 
   interactivity();
-  const centerLine: Float32Array = new Float32Array([0, 0, 0, 0, 0, 50]);
+  const centerLine: Float32Array = new Float32Array([
+    0, 0, 0, 0, 0, 50, -5.2, 0, 50,
+  ]);
+  const Mnorm: Float32Array = new Float32Array([0, 0, 0, 0, 5, 0]);
   const { scene, camera } = useThrelte();
 
   onMount(async () => {
@@ -78,20 +82,17 @@
       radius = Math.sqrt(probeHeightX ** 2 + probeHeightY ** 2);
     }
 
-    probeHeightX = 8;
-    probeHeightY = 8;
+    probeHeightX = 1;
+    probeHeightY = 1;
 
     const startPosition = new Vector3(probeHeightX, probeHeightY, -10);
     const startDirection = new Vector3(0, 0, 1);
-    const image: Vector3 = new Vector3(-5.2, 0, 50);
-    tracePoints = buildRayCasterPath(
-      scene,
-      probeHeightX,
-      probeHeightY,
-      image,
-      startPosition,
-      startDirection
+    const xximage: Vector3 = new Vector3(-5.2, 0, 50);
+    const image: Ray = new Ray(
+      new Vector3(-3.75, 0, 50),
+      new Vector3(-1, 0, 0)
     );
+    tracePoints = buildRayCasterPath(scene, probeHeightX, probeHeightY, image);
   }
 
   let tracePoints: Vector3[] = [];
@@ -191,7 +192,7 @@
 <!-- Mirror 1 Geometry -->
 <T.Mesh
   position={[1, 0, 50 + 1]}
-  rotation={[90 * DEG2RAD, 0, -45 * DEG2RAD]}
+  rotation={[-90 * DEG2RAD, 0, 45 * DEG2RAD]}
   name={"mirror"}
   userData={lensProps}
 >
@@ -210,6 +211,7 @@
   <T.MeshStandardMaterial color="purple" />
 </T.Mesh>
 
+<!-- Center Line for System -->
 <T.Mesh position={[0, 0, 0]} name={"line"}>
   <T
     is={Line2}
