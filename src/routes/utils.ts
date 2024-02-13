@@ -104,6 +104,6 @@ export function Vect3toFloat32(vpts: Vector3[]): Float32Array {
     return pts
   }
   
-  export function pv(p: Vector3, digits = 3) {
-    return `V3(${p.x.toFixed(digits)}, ${p.y.toFixed(digits)}, ${p.z.toFixed(digits)})`
-  }
+export function pv(p: Vector3, digits = 3) {
+  return `V3(${p.x.toFixed(digits)}, ${p.y.toFixed(digits)}, ${p.z.toFixed(digits)})`
+}

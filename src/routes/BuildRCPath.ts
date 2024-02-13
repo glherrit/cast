@@ -1,5 +1,5 @@
 import { Vector3, Ray, Scene, Raycaster, Matrix4, Euler } from "three";
-import { calculateRefractionDirection, intersectRayPlane } from "./utils";
+import { pv, calculateRefractionDirection, intersectRayPlane } from "./utils";
 
 class RaycasterWithRay extends Raycaster {
   constructor(ray: Ray, near = 0, far = Infinity) {
@@ -9,7 +9,8 @@ class RaycasterWithRay extends Raycaster {
 }
 
 // 0 prints nothing, 1 prints some, 2 prints more, 3 prints everything
-const DebugLevel = 1;
+const DebugLevel = 0;
+const showHits = false;
 
 export function buildRayCasterPath( 
   scene: Scene, 
@@ -54,7 +55,8 @@ export function buildRayCasterPath(
       // first check for no hits - bail out if no hits
 
       const hitsOnMirror = raycaster.intersectObject(opticsInPath[i], false);
-      // console.log("🚀 ~ hitsOnMirror:", hitsOnMirror)
+      if (showHits) console.log(`mirror hits el ${i}:`, hitsOnMirror.map(r => r.point))
+
       // 🫨🫨🫨🫨🫨🫨🫨🫨🫨🫨🫨🫨🫨🫨🫨🫨🫨🫨🫨🫨
       if (DebugLevel > 2) {
         console.log("🫨🫨🫨🫨🫨🫨🫨🫨🫨")
@@ -93,12 +95,13 @@ export function buildRayCasterPath(
       // first check for no hits - bail out if no hits
 
       const hitsSide1 = raycaster.intersectObject(opticsInPath[i], false);
+      if (showHits)  console.log(`lens hits e${i} s1`, hitsSide1.map(r => r.point));
 
       // 🫨🫨🫨🫨🫨🫨🫨🫨🫨🫨🫨🫨🫨🫨🫨🫨🫨🫨🫨🫨
       if (DebugLevel > 2) {
         console.log("🫨🫨🫨🫨🫨🫨🫨🫨🫨")
         console.log(`🚀 element ${i} Side 1 has ${hitsSide1.length} hits`);
-        console.log("hits side 2", hitsSide1);
+        console.log("hits side 1", hitsSide1);
       }
 
       if (hitsSide1.length === 0) {
@@ -152,6 +155,7 @@ export function buildRayCasterPath(
 
       raycaster.set(hitPoint.clone(), refractedDirSide1.clone());
       const hitsSide2 = raycaster.intersectObject(opticsInPath[i], false);
+      if (showHits)  console.log(`lens hits e${i} s2`, hitsSide2.map(r => r.point));
 
       // 🫨🫨🫨🫨🫨🫨🫨🫨🫨🫨🫨🫨🫨🫨🫨🫨🫨🫨🫨🫨
       if (DebugLevel > 2) {
@@ -200,7 +204,13 @@ export function buildRayCasterPath(
     if (offset instanceof Ray) {
       const lastray = rays[rays.length - 1].clone();
       const [image, _] = intersectRayPlane(lastray.origin, lastray.direction, offset.origin, offset.direction);
+
       rays.push(new Ray(image, lastray.direction.clone()));
+      const err = image.distanceTo(offset.origin);
+      // console.log("🚀 ~ offset:", pv(offset.origin))
+      // console.log("🚀 ~ image:", pv(image))
+      console.log("🚀 ~ err:", err.toFixed(6))
+
       if (DebugLevel > 1) {
         console.log("offset is a ray", offset)
         console.log("🚀 ~ lastray:", lastray)
@@ -208,19 +218,15 @@ export function buildRayCasterPath(
         console.log("🚀 ~ lastray.direction.clone():", lastray.direction.clone())
       }
     }
-
   }
-  // temp separate rays into dir and orig vector[]
-  const t: Vector3[] = [];
-  rays.forEach((r, index) => {
-    t.push(r.origin);
-  });
 
   // 🫨🫨🫨🫨🫨🫨🫨🫨🫨🫨🫨🫨🫨🫨🫨🫨🫨🫨🫨🫨
   if (DebugLevel > 0) {
     console.log("🫨🫨🫨🫨🫨🫨🫨🫨🫨")
     console.log("🚀~ ray posi:", rays.map(r => r.origin));
-    console.log("🚀~ ray dirs:", rays.map(r => r.direction));
+    console.log("🚀~ ray dirs:", rays.map(r => r.direction));    ;
+  }
+  if (DebugLevel > 1) {
     console.log("🚀~ surfaceNormals:", surfaceNormals);
   }
   return rays.map(r => r.origin);

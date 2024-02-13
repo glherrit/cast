@@ -38,7 +38,7 @@
 
   interactivity();
   const centerLine: Float32Array = new Float32Array([
-    0, 0, 0, 0, 0, 50, -5.2, 0, 50,
+    0, 0, 0, 0, 0, 50, -3.75, 0, 50,
   ]);
   const Mnorm: Float32Array = new Float32Array([0, 0, 0, 0, 5, 0]);
   const { scene, camera } = useThrelte();
@@ -75,15 +75,16 @@
   }
 
   function sourceClick() {
-    let radius = 20;
-    while (radius > 10) {
-      probeHeightY = Math.floor(Math.random() * 21) - 10;
-      probeHeightX = Math.floor(Math.random() * 21) - 10;
+    let radius = 3;
+    while (radius > 1) {
+      probeHeightY = Math.random() * 2 - 1;
+      probeHeightX = Math.random() * 2 - 1;
       radius = Math.sqrt(probeHeightX ** 2 + probeHeightY ** 2);
     }
-
-    probeHeightX = 1;
-    probeHeightY = 1;
+    // console.log("🧨 ~ probeHeightX:", probeHeightX);
+    // console.log("🧨 ~ probeHeightY:", probeHeightY);
+    // probeHeightX = 0;
+    // probeHeightY = 0;
 
     const startPosition = new Vector3(probeHeightX, probeHeightY, -10);
     const startDirection = new Vector3(0, 0, 1);
@@ -112,7 +113,7 @@
   const nz = 2.4027858866;
 
   const lensProps = {
-    ROC: 50,
+    ROC: 100,
     Index: 2.4027858866,
   };
 
@@ -216,7 +217,7 @@
   <T
     is={Line2}
     geometry={new LineGeometry().setPositions(centerLine)}
-    material={new LineMaterial({ color: "yellow", linewidth: 0.003 })}
+    material={new LineMaterial({ color: "yellow", linewidth: 0.001 })}
   />
 </T.Mesh>
 
