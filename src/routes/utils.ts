@@ -1,11 +1,11 @@
 import { Ray, Vector2, Vector3, Plane } from "three"
 import { LineGeometry } from "three/examples/jsm/Addons.js"
 
-export function genLensShellPoints(Apert: number, R: number, CT: number, dr: number) {
+export function genLensShellPts(Apert: number, R: number, k: number, CT: number, dr: number) {
     const pts = []
     const tweak = dr / 10
     for(let r = 0; r < Apert + tweak; r += dr) {
-      const z = sagAt(R, 0, r)
+      const z = sagAt(R, k, r)
       pts.push(new Vector2(r, z))
     }
 

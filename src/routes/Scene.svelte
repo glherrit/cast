@@ -28,7 +28,7 @@
     Vect3toFloat32,
     calculateRefractionDirection,
     findClosestX,
-    genLensShellPoints,
+    genLensShellPts,
     genLineSegment,
     intersectRayPlane,
     pv,
@@ -38,7 +38,7 @@
 
   interactivity();
   const centerLine: Float32Array = new Float32Array([
-    0, 0, 0, 0, 0, 50, -3.75, 0, 50,
+    0, 0, 0, 0, 0, 50, -5.206, 0, 50,
   ]);
   const Mnorm: Float32Array = new Float32Array([0, 0, 0, 0, 5, 0]);
   const { scene, camera } = useThrelte();
@@ -86,11 +86,8 @@
     // probeHeightX = 0;
     // probeHeightY = 0;
 
-    const startPosition = new Vector3(probeHeightX, probeHeightY, -10);
-    const startDirection = new Vector3(0, 0, 1);
-    const xximage: Vector3 = new Vector3(-5.2, 0, 50);
     const image: Ray = new Ray(
-      new Vector3(-3.75, 0, 50),
+      new Vector3(-5.206, 0, 50),
       new Vector3(-1, 0, 0)
     );
     tracePoints = buildRayCasterPath(scene, probeHeightX, probeHeightY, image);
@@ -106,19 +103,27 @@
 
   let probeHeightY = 5;
   let probeHeightX = 5;
-  const ROC = 100;
+  const radiusOfCurvature = 100;
+  const conicConstant = 0;
   const zPosition = 10;
   const Aperture = 12.5;
-  const ApStep = 0.2;
-  const nz = 2.4027858866;
+  const CenterThickness = 3;
+  const latheSegs = 51; // number of y segements for the lens
+  const ApertureSteps = 1 / (latheSegs - 1); // number of steps in sag calculation
 
   const lensProps = {
-    ROC: 100,
+    ROC: radiusOfCurvature,
     Index: 2.4027858866,
   };
 
-  const lensTwo = genLensShellPoints(Aperture, ROC, 3, ApStep);
-  let lens2 = new LatheGeometry(lensTwo, 51, 0, Math.PI * 2);
+  const lensTwo = genLensShellPts(
+    Aperture,
+    radiusOfCurvature,
+    conicConstant,
+    CenterThickness,
+    ApertureSteps
+  );
+  let lens2 = new LatheGeometry(lensTwo, latheSegs, 0, Math.PI * 2);
   //console.log("🚀 ~ lensTwo:", lensTwo)
   // let geo = new LatheGeometry(lensTwo, 51, 0, Math.PI * 2);
   // let matl = new MeshPhongMaterial({
